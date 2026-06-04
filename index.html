@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Agenda CP">
+<meta name="theme-color" content="#185FA5">
+<link rel="manifest" href="manifest.json">
+<title>Agenda — Contador Público</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --accent:#185FA5;--accent-light:#E6F1FB;
+  --bg:#fff;--bg2:#f5f5f5;--bg3:#e8e8e8;
+  --text:#111;--text2:#555;--text3:#999;
+  --border:rgba(0,0,0,.12);--border2:rgba(0,0,0,.22);
+  --nav-h:60px;--header-h:54px;
+  --r:10px;--rl:14px;
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#1c1c1e;--bg2:#2c2c2e;--bg3:#3a3a3c;
+  --text:#f2f2f7;--text2:#aeaeb2;--text3:#636366;
+  --border:rgba(255,255,255,.1);--border2:rgba(255,255,255,.22);
+  --accent-light:#0d2a45;
+}}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg2);color:var(--text);font-size:15px;-webkit-font-smoothing:antialiased}
+.app{display:flex;flex-direction:column;height:100dvh;max-width:480px;margin:0 auto;background:var(--bg);position:relative;overflow:hidden}
+.top-bar{height:var(--header-h);display:flex;align-items:flex-end;padding:0 16px 10px;background:var(--bg);border-bottom:0.5px solid var(--border);flex-shrink:0;gap:8px;z-index:5}
+.top-title{font-size:18px;font-weight:700;flex:1}
+.page-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.bottom-nav{height:var(--nav-h);display:flex;border-top:0.5px solid var(--border);background:var(--bg);flex-shrink:0;padding-bottom:env(safe-area-inset-bottom,0)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:none;cursor:pointer;color:var(--text3);padding:8px 2px;font-size:10px;font-weight:600}
+.bnav-btn.active{color:var(--accent)}
+.bnav-btn i{font-size:24px}
+.page{display:none}.page.active{display:block}
+
+/* BOTONES */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:0 16px;height:44px;font-size:15px;font-weight:600;border:1px solid var(--border2);border-radius:var(--r);cursor:pointer;background:var(--bg);color:var(--text);white-space:nowrap;-webkit-appearance:none;transition:opacity .15s}
+.btn:active{opacity:.65}
+.btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn-green{background:#1D9E75;color:#fff;border-color:#1D9E75}
+.btn-sm{height:36px;font-size:13px;padding:0 12px;font-weight:600}
+.btn-block{width:100%}
+.btn i{font-size:18px}
+.icon-btn{width:38px;height:38px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--bg2);cursor:pointer;color:var(--text2);font-size:20px}
+.icon-btn:active{opacity:.6}
+
+/* LAYOUT */
+.sep{height:8px;background:var(--bg2)}
+.section{padding:14px 16px}
+.section-label{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px}
+
+/* STATS */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 16px}
+.stat-card{background:var(--bg2);border-radius:var(--r);padding:14px;text-align:center}
+.stat-val{font-size:28px;font-weight:700}
+.stat-lbl{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:700}
+.badge-pend{background:#fef3c7;color:#92400e}
+.badge-prog{background:#dbeafe;color:#1e40af}
+.badge-done{background:#d1fae5;color:#065f46}
+.badge-venc{background:#fee2e2;color:#991b1b}
+
+/* TAGS */
+.tax-tag{display:inline-flex;align-items:center;padding:3px 9px;border-radius:12px;font-size:11px;font-weight:700;border:1px solid transparent}
+.tax-tag.arca{background:#dbeafe;color:#1e40af;border-color:#bfdbfe}
+.tax-tag.api{background:#d1fae5;color:#065f46;border-color:#a7f3d0}
+.tax-tag.muni{background:#fef9c3;color:#854d0e;border-color:#fde68a}
+.tax-tag.comarb{background:#ede9fe;color:#5b21b6;border-color:#ddd6fe}
+.tax-tag.tarea{background:var(--bg2);color:var(--text2);border-color:var(--border2)}
+.tax-tag.custom{background:#fce7f3;color:#9d174d;border-color:#fbcfe8}
+
+/* LISTAS */
+.list-item{padding:12px 16px;border-bottom:0.5px solid var(--border);display:flex;align-items:flex-start;gap:12px}
+.list-item:active{background:var(--bg2)}
+.li-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:21px}
+.li-body{flex:1;min-width:0}
+.li-title{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.li-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+
+/* PILLS */
+.pill-row{display:flex;gap:6px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.pill-row::-webkit-scrollbar{display:none}
+.pill{padding:6px 14px;border-radius:20px;font-size:13px;font-weight:600;border:1px solid var(--border2);background:var(--bg);color:var(--text2);cursor:pointer;white-space:nowrap;flex-shrink:0}
+.pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+/* CALENDARIO */
+.cal-nav{display:flex;align-items:center;padding:10px 16px;gap:8px}
+.cal-nav-label{flex:1;text-align:center;font-size:16px;font-weight:700}
+.cal-header{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px}
+.cal-header span{font-size:11px;font-weight:700;color:var(--text3);text-align:center;padding:4px 0}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:0 10px 10px}
+.cal-day{min-height:50px;padding:4px 2px;cursor:pointer;border-radius:8px}
+.cal-day:active{background:var(--bg2)}
+.cal-day.today{background:var(--accent-light)}
+.cal-day.other{opacity:.3}
+.day-num{font-size:12px;font-weight:700;color:var(--text2);text-align:center;margin-bottom:3px}
+.cal-day.today .day-num{color:var(--accent)}
+.dots{display:flex;flex-wrap:wrap;justify-content:center;gap:2px}
+.dot{width:5px;height:5px;border-radius:50%}
+.dot-arca{background:#2563eb}.dot-api{background:#059669}.dot-muni{background:#d97706}
+.dot-comarb{background:#7c3aed}.dot-tarea{background:#6b7280}.dot-custom{background:#db2777}
+
+/* UPCOMING */
+.upc-item{display:flex;align-items:flex-start;gap:10px;padding:11px 16px;border-bottom:0.5px solid var(--border)}
+.upc-stripe{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:36px}
+.upc-date{font-size:13px;font-weight:700;color:var(--text2);min-width:50px;padding-top:1px}
+.upc-info{flex:1;min-width:0}
+.upc-desc{font-size:13px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* CONSTANCIAS */
+.const-row{display:flex;align-items:center;padding:14px 16px;border-bottom:0.5px solid var(--border);gap:12px;cursor:pointer;text-decoration:none;color:inherit}
+.const-row:active{background:var(--bg2)}
+.const-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.const-body{flex:1}
+.const-title{font-size:15px;font-weight:600}
+.const-sub{font-size:13px;color:var(--text2)}
+.const-arrow{color:var(--text3);font-size:20px}
+
+/* CONTRIBUYENTES */
+.contrib-card{padding:14px 16px;border-bottom:0.5px solid var(--border)}
+.contrib-name{font-size:16px;font-weight:700}
+.contrib-cuit{font-size:13px;color:var(--text2);margin:2px 0}
+.contrib-tel{font-size:13px;color:var(--accent);margin-bottom:6px;display:flex;align-items:center;gap:4px}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+
+/* ALERTA VENCIMIENTOS */
+.alert-box{margin:12px 16px;padding:14px;border-radius:var(--r);border:1px solid}
+.alert-hoy{background:#fee2e2;border-color:#fca5a5;color:#7f1d1d}
+.alert-manana{background:#fef9c3;border-color:#fde68a;color:#78350f}
+.alert-title{font-size:14px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.alert-item{font-size:13px;padding:2px 0}
+
+/* NOTIF BANNER */
+.notif-banner{background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--r);margin:12px 16px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.notif-banner:active{opacity:.8}
+.notif-banner i{font-size:22px;color:var(--accent);flex-shrink:0}
+.notif-banner-text{flex:1;font-size:13px;color:var(--accent);font-weight:600}
+.notif-banner-sub{font-size:12px;color:var(--text2);font-weight:400;margin-top:1px}
+
+/* MODALS */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:flex-end;justify-content:center}
+.modal-bg.open{display:flex}
+.modal-bg.center{align-items:center}
+.sheet{background:var(--bg);border-radius:18px 18px 0 0;width:100%;max-height:93dvh;overflow-y:auto;padding-bottom:calc(env(safe-area-inset-bottom,0) + 8px)}
+.sheet-center{background:var(--bg);border-radius:var(--rl);width:calc(100% - 32px);max-height:88dvh;overflow-y:auto}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:var(--border2);margin:12px auto 14px}
+.sheet-title{font-size:17px;font-weight:700;padding:0 16px 12px;border-bottom:0.5px solid var(--border)}
+.sheet-body{padding:16px}
+.sheet-actions{display:flex;gap:8px;padding:14px 16px;border-top:0.5px solid var(--border)}
+.sheet-actions .btn{flex:1}
+
+/* FORMULARIOS */
+.form-row{margin-bottom:14px}
+.form-row label{display:block;font-size:13px;color:var(--text2);margin-bottom:5px;font-weight:600}
+.form-row input,.form-row select,.form-row textarea{width:100%;font-size:16px;padding:11px 13px;border:1px solid var(--border2);border-radius:var(--r);background:var(--bg);color:var(--text);-webkit-appearance:none;appearance:none}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--accent);border-width:2px}
+.form-row textarea{min-height:72px;resize:vertical}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.org-group{margin-bottom:16px}
+.org-group-title{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;padding:10px 0 6px;border-bottom:0.5px solid var(--border);margin-bottom:2px}
+.chk-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:0.5px solid var(--border);font-size:15px;cursor:pointer}
+.chk-item:last-child{border-bottom:none}
+.chk-item input[type=checkbox]{width:22px;height:22px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+
+/* WSP MODAL */
+.wsp-contrib-item{display:flex;align-items:center;padding:13px 16px;border-bottom:0.5px solid var(--border);gap:12px;cursor:pointer}
+.wsp-contrib-item:active{background:var(--bg2)}
+.wsp-avatar{width:40px;height:40px;border-radius:20px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--accent);flex-shrink:0}
+.wsp-info{flex:1;min-width:0}
+.wsp-name{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wsp-tel{font-size:13px;color:var(--text2);margin-top:1px}
+.wsp-tel.no-tel{color:var(--text3)}
+.wsp-send{width:36px;height:36px;border-radius:18px;background:#25D366;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;flex-shrink:0;border:none;cursor:pointer}
+.wsp-send:active{opacity:.7}
+
+/* EMPTY / TOAST / FAB */
+.empty{text-align:center;padding:48px 20px;color:var(--text3);font-size:14px}
+.toast{position:fixed;bottom:calc(var(--nav-h) + 16px);left:50%;transform:translateX(-50%) translateY(16px);background:#222;color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:500;opacity:0;transition:all .25s;z-index:200;white-space:nowrap;pointer-events:none}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.fab{position:fixed;bottom:calc(var(--nav-h) + 16px);right:20px;width:54px;height:54px;border-radius:27px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(24,95,165,.4);font-size:26px;z-index:10}
+.fab:active{opacity:.8;transform:scale(.95)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top-bar">
+  <div class="top-title" id="top-title">Inicio</div>
+  <div id="top-actions"></div>
+</div>
+<div class="page-wrap" id="page-wrap">
+
+<!-- INICIO -->
+<div class="page active" id="page-inicio">
+  <div id="notif-banner-wrap"></div>
+  <div id="alert-hoy-wrap"></div>
+  <div id="alert-manana-wrap"></div>
+  <div class="stat-grid" id="stat-grid"></div>
+  <div class="sep"></div>
+  <div class="section"><div class="section-label">Próximos vencimientos (7 días)</div></div>
+  <div id="dash-venc"></div>
+  <div class="sep"></div>
+  <div class="section"><div class="section-label">Tareas urgentes</div></div>
+  <div id="dash-tareas"></div>
+  <div class="sep"></div>
+  <div class="section"><div class="section-label">Consultas rápidas</div></div>
+  <a class="const-row" href="https://seti.afip.gob.ar/padron-puc-constancia-internet/ConsultaConstanciaAction.do" target="_blank" rel="noopener">
+    <div class="const-icon" style="background:#dbeafe;color:#1e40af"><i class="ti ti-file-certificate"></i></div>
+    <div class="const-body"><div class="const-title">Constancia de inscripción ARCA</div><div class="const-sub">seti.afip.gob.ar</div></div>
+    <i class="ti ti-external-link const-arrow"></i>
+  </a>
+  <a class="const-row" href="https://www.santafe.gov.ar/index.php/web/content/view/full/204349" target="_blank" rel="noopener">
+    <div class="const-icon" style="background:#d1fae5;color:#065f46"><i class="ti ti-file-certificate"></i></div>
+    <div class="const-body"><div class="const-title">Constancia de inscripción API Santa Fe</div><div class="const-sub">santafe.gov.ar</div></div>
+    <i class="ti ti-external-link const-arrow"></i>
+  </a>
+  <a class="const-row" href="https://www.comarb.gov.ar/" target="_blank" rel="noopener">
+    <div class="const-icon" style="background:#ede9fe;color:#5b21b6"><i class="ti ti-building-bank"></i></div>
+    <div class="const-body"><div class="const-title">Portal COMARB</div><div class="const-sub">comarb.gov.ar</div></div>
+    <i class="ti ti-external-link const-arrow"></i>
+  </a>
+  <a class="const-row" href="https://www.rosario.gob.ar/web/ciudad/economia-y-empresa/comercio-e-industria/habilitaciones/drei" target="_blank" rel="noopener">
+    <div class="const-icon" style="background:#fef9c3;color:#854d0e"><i class="ti ti-building-community"></i></div>
+    <div class="const-body"><div class="const-title">Drei — Municipalidad de Rosario</div><div class="const-sub">rosario.gob.ar</div></div>
+    <i class="ti ti-external-link const-arrow"></i>
+  </a>
+  <div style="height:80px"></div>
+</div>
+
+<!-- TAREAS -->
+<div class="page" id="page-tareas">
+  <div class="pill-row" id="tarea-pills"></div>
+  <div id="tareas-list"></div>
+  <div style="height:80px"></div>
+</div>
+
+<!-- CALENDARIO -->
+<div class="page" id="page-cal">
+  <div class="cal-nav">
+    <button class="icon-btn" onclick="changeMonth(-1)"><i class="ti ti-chevron-left"></i></button>
+    <span class="cal-nav-label" id="cal-label"></span>
+    <button class="icon-btn" onclick="changeMonth(1)"><i class="ti ti-chevron-right"></i></button>
+  </div>
+  <div class="pill-row" id="cal-pills">
+    <span class="pill active" data-org="arca" onclick="toggleOrg(this)">ARCA</span>
+    <span class="pill active" data-org="api" onclick="toggleOrg(this)">API SF</span>
+    <span class="pill active" data-org="muni" onclick="toggleOrg(this)">Muni</span>
+    <span class="pill active" data-org="comarb" onclick="toggleOrg(this)">COMARB</span>
+    <span class="pill active" data-org="tarea" onclick="toggleOrg(this)">Tareas</span>
+    <span class="pill active" data-org="custom" onclick="toggleOrg(this)">Manuales</span>
+  </div>
+  <div class="cal-header">
+    <span>Do</span><span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sa</span>
+  </div>
+  <div class="cal-grid" id="cal-grid"></div>
+  <div class="sep"></div>
+  <div style="display:flex;align-items:center;padding:12px 16px;gap:10px">
+    <div class="section-label" style="margin:0;flex:1">Vencimientos del mes</div>
+    <button class="btn btn-green btn-sm" onclick="openWspModal()"><i class="ti ti-brand-whatsapp"></i>WhatsApp</button>
+  </div>
+  <div id="cal-list"></div>
+  <div style="height:80px"></div>
+</div>
+
+<!-- CONTRIBUYENTES -->
+<div class="page" id="page-contrib">
+  <div id="contrib-list-el"></div>
+  <div style="height:80px"></div>
+</div>
+
+</div><!-- /page-wrap -->
+
+<nav class="bottom-nav">
+  <button class="bnav-btn active" id="bn-inicio" onclick="showPage('inicio')"><i class="ti ti-layout-dashboard"></i>Inicio</button>
+  <button class="bnav-btn" id="bn-tareas" onclick="showPage('tareas')"><i class="ti ti-checklist"></i>Tareas</button>
+  <button class="bnav-btn" id="bn-cal" onclick="showPage('cal')"><i class="ti ti-calendar"></i>Calendario</button>
+  <button class="bnav-btn" id="bn-contrib" onclick="showPage('contrib')"><i class="ti ti-users"></i>Clientes</button>
+</nav>
+
+<button class="fab" id="fab" onclick="fabAction()" aria-label="Agregar" style="display:none"><i class="ti ti-plus"></i></button>
+<div class="toast" id="toast"></div>
+
+<!-- MODAL TAREA -->
+<div class="modal-bg" id="modal-tarea">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="mt-title">Nueva tarea</div>
+  <div class="sheet-body">
+    <div class="form-row"><label>Cliente</label><select id="t-cliente"></select></div>
+    <div class="form-row"><label>Tema / Descripción</label><input type="text" id="t-tema" placeholder="Ej: DDJJ IVA junio" autocomplete="off"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>Fecha límite</label><input type="date" id="t-fecha"></div>
+      <div class="form-row"><label>Prioridad</label>
+        <select id="t-prioridad"><option value="alta">Alta</option><option value="media" selected>Media</option><option value="baja">Baja</option></select></div>
+    </div>
+    <div class="form-row"><label>Estado</label>
+      <select id="t-estado"><option value="pendiente">Pendiente</option><option value="en progreso">En progreso</option><option value="completado">Completado</option></select></div>
+    <div class="form-row"><label>Recordatorio</label>
+      <select id="t-recordatorio">
+        <option value="ninguno">Sin recordatorio</option>
+        <option value="dia_anterior" selected>Día anterior al vencimiento</option>
+        <option value="mismo_dia">Día del vencimiento</option>
+        <option value="ambos">Día anterior + día del vencimiento</option>
+      </select></div>
+    <div class="form-row"><label>Notas</label><textarea id="t-notas" placeholder="Observaciones..."></textarea></div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn" onclick="closeModal('modal-tarea')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveTarea()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL CONTRIBUYENTE -->
+<div class="modal-bg" id="modal-contrib">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="mc-title">Nuevo contribuyente</div>
+  <div class="sheet-body">
+    <div class="form-row"><label>Nombre / Razón social</label><input type="text" id="c-nombre" placeholder="García, Juan" autocomplete="off"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>CUIT</label><input type="text" id="c-cuit" placeholder="20-12345678-9" inputmode="numeric" autocomplete="off"></div>
+      <div class="form-row"><label>Celular WhatsApp</label><input type="tel" id="c-tel" placeholder="+54 9 341 555-1234" inputmode="tel" autocomplete="off"></div>
+    </div>
+    <div class="form-row"><label>Observaciones</label><textarea id="c-obs" placeholder="Categoría, cierre ejercicio..." style="min-height:54px"></textarea></div>
+    <div class="org-group">
+      <div class="org-group-title"><span class="tax-tag arca">ARCA — Impuestos federales</span></div>
+      <div id="arca-checks"></div>
+    </div>
+    <div class="org-group">
+      <div class="org-group-title"><span class="tax-tag api">API Santa Fe</span></div>
+      <div id="api-checks"></div>
+    </div>
+    <div class="org-group">
+      <div class="org-group-title"><span class="tax-tag muni">Municipalidad de Rosario</span></div>
+      <div id="muni-checks"></div>
+    </div>
+    <div class="org-group">
+      <div class="org-group-title"><span class="tax-tag comarb">COMARB</span></div>
+      <div id="comarb-checks"></div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn" onclick="closeModal('modal-contrib')">Cancelar</button>
+    <button class="btn btn-primary" onclick="saveContrib()">Guardar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL DIA -->
+<div class="modal-bg center" id="modal-dia">
+<div class="sheet-center">
+  <div class="sheet-body">
+    <div style="font-size:17px;font-weight:700;margin-bottom:12px" id="md-title">Día</div>
+    <div id="md-events" style="margin-bottom:14px;max-height:180px;overflow-y:auto"></div>
+    <div class="form-row"><label>Agregar vencimiento manual</label>
+      <input type="text" id="dia-desc" placeholder="Descripción" autocomplete="off"></div>
+    <div class="form-grid">
+      <div class="form-row"><label>Organismo</label>
+        <select id="dia-org"><option value="arca">ARCA</option><option value="api">API SF</option><option value="muni">Muni Rosario</option><option value="comarb">COMARB</option><option value="custom">Otro</option></select></div>
+      <div class="form-row"><label>Contribuyente</label><select id="dia-contrib"></select></div>
+    </div>
+  </div>
+  <div class="sheet-actions">
+    <button class="btn" onclick="closeModal('modal-dia')">Cerrar</button>
+    <button class="btn btn-primary" onclick="saveDiaEvent()">Agregar</button>
+  </div>
+</div>
+</div>
+
+<!-- MODAL WHATSAPP POR CLIENTE -->
+<div class="modal-bg" id="modal-wsp">
+<div class="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">Enviar vencimientos por WhatsApp</div>
+  <div class="sheet-body" style="padding:0">
+    <div style="padding:12px 16px 8px;font-size:13px;color:var(--text2)">
+      Seleccioná un cliente para enviarle sus vencimientos de <strong id="wsp-mes-label"></strong>.
+      Los que tienen 📱 tienen número guardado.
+    </div>
+    <!-- Opción todos -->
+    <div class="wsp-contrib-item" onclick="enviarWsp(null)">
+      <div class="wsp-avatar" style="background:#f1f5f9;color:#475569">
+        <i class="ti ti-users" style="font-size:20px"></i>
+      </div>
+      <div class="wsp-info">
+        <div class="wsp-name">Todos los contribuyentes</div>
+        <div class="wsp-tel">Resumen general del mes</div>
+      </div>
+      <button class="wsp-send" onclick="event.stopPropagation();enviarWsp(null)"><i class="ti ti-brand-whatsapp"></i></button>
+    </div>
+    <div id="wsp-contrib-list"></div>
+  </div>
+  <div style="padding:14px 16px;border-top:0.5px solid var(--border)">
+    <button class="btn btn-block" onclick="closeModal('modal-wsp')">Cerrar</button>
+  </div>
+</div>
+</div>
+
+<script>
+'use strict';
+/* =========================================================
+   DATOS
+   ========================================================= */
+const IMPUESTOS={
+  arca:[
+    {id:'monotributo',label:'Monotributo'},
+    {id:'sicore',label:'SICORE'},
+    {id:'sircar',label:'SIRCAR'},
+    {id:'f931',label:'F.931 — Cargas Sociales empleador'},
+    {id:'lsd',label:'Libro de Sueldos Digital'},
+    {id:'iva',label:'IVA'},
+    {id:'libro_iva',label:'Libro de IVA Digital'},
+    {id:'ganancias',label:'Impuesto a las Ganancias'},
+    {id:'bp',label:'Bienes Personales'},
+    {id:'bp_acc',label:'BP — Acciones y Part. Societarias'},
+    {id:'rips',label:'Reg. Inf. Participaciones Societarias'},
+  ],
+  api:[{id:'iibb_sf',label:'Ingresos Brutos Santa Fe'}],
+  muni:[{id:'drei',label:'Drei Rosario (Conv. Multilateral)'}],
+  comarb:[{id:'cm_comarb',label:'CM03 / CM05 COMARB'}]
+};
+const ORG={arca:'ARCA',api:'API SF',muni:'Muni Rosario',comarb:'COMARB',tarea:'Tarea',custom:'Manual'};
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const MESES_C=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+/* =========================================================
+   PERSISTENCIA
+   ========================================================= */
+function loadDB(){
+  try{
+    const s=localStorage.getItem('agenda_cp_v3');
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  return {
+    contribuyentes:[
+      {id:1,nombre:'García, Juan Martín',cuit:'20-12345678-9',tel:'',obs:'Monotributista cat. H',impuestos:{arca:['monotributo'],api:['iibb_sf'],muni:[],comarb:[]}},
+      {id:2,nombre:'Comercial López SRL',cuit:'30-87654321-7',tel:'',obs:'RI — cierre 31/12',impuestos:{arca:['iva','sicore','f931','lsd','ganancias','libro_iva'],api:['iibb_sf'],muni:[],comarb:['cm_comarb']}},
+      {id:3,nombre:'Martínez, Laura B.',cuit:'27-23456789-4',tel:'',obs:'',impuestos:{arca:['ganancias','bp','sicore'],api:['iibb_sf'],muni:[],comarb:[]}},
+    ],
+    tareas:[
+      {id:1,clienteId:1,tema:'Recategorización Monotributo',fecha:'2025-07-11',prioridad:'alta',estado:'pendiente',recordatorio:'ambos',notas:'Verificar categoría actual'},
+      {id:2,clienteId:2,tema:'DDJJ IVA junio',fecha:'2025-07-21',prioridad:'alta',estado:'en progreso',recordatorio:'dia_anterior',notas:'Solicitar libro IVA digital'},
+      {id:3,clienteId:3,tema:'Liquidación Ganancias',fecha:'2025-06-30',prioridad:'media',estado:'pendiente',recordatorio:'dia_anterior',notas:''},
+      {id:4,clienteId:2,tema:'F.931 junio',fecha:'2025-07-15',prioridad:'alta',estado:'pendiente',recordatorio:'ambos',notas:''},
+    ],
+    vencimientos:[],
+    nextId:{c:4,t:5,v:1},
+    notifPermiso:false,
+    ultimoCheck:''
+  };
+}
+function saveDB(){try{localStorage.setItem('agenda_cp_v3',JSON.stringify(DB));}catch(e){}}
+
+let DB=loadDB();
+let curPage='inicio';
+let calYear=new Date().getFullYear();
+let calMonth=new Date().getMonth();
+let activeOrgs=new Set(['arca','api','muni','comarb','tarea','custom']);
+let tareaFilter='todos';
+let editTareaId=null;
+let editContribId=null;
+let selectedDay=null;
+
+/* =========================================================
+   SERVICE WORKER + NOTIFICACIONES
+   ========================================================= */
+async function registrarSW(){
+  if(!('serviceWorker' in navigator)) return;
+  try{
+    await navigator.serviceWorker.register('./sw.js');
+    navigator.serviceWorker.addEventListener('message', e=>{
+      if(e.data?.type==='REQUEST_VENC_CHECK') checkVencimientosParaNotif();
+    });
+  }catch(err){console.warn('SW no registrado:',err);}
+}
+
+async function pedirPermisoNotif(){
+  if(!('Notification' in window)){toast('Tu navegador no soporta notificaciones');return;}
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){
+    DB.notifPermiso=true;
+    saveDB();
+    renderNotifBanner();
+    toast('✅ Notificaciones activadas');
+    checkVencimientosParaNotif();
+  } else {
+    toast('Permiso denegado. Activalo desde la configuración del navegador.');
+  }
+}
+
+function renderNotifBanner(){
+  const wrap=document.getElementById('notif-banner-wrap');
+  if(!('Notification' in window)||Notification.permission==='granted'){
+    wrap.innerHTML='';return;
+  }
+  wrap.innerHTML=`
+    <div class="notif-banner" onclick="pedirPermisoNotif()">
+      <i class="ti ti-bell"></i>
+      <div class="notif-banner-text">Activar notificaciones de vencimientos
+        <div class="notif-banner-sub">Recibí alertas el día anterior y el día del vencimiento</div>
+      </div>
+      <i class="ti ti-chevron-right" style="color:var(--accent);font-size:18px"></i>
+    </div>`;
+}
+
+function checkVencimientosParaNotif(){
+  if(Notification.permission!=='granted') return;
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const hoyStr=hoy.toISOString().split('T')[0];
+  // Evitar chequear más de una vez por día
+  if(DB.ultimoCheck===hoyStr) return;
+  DB.ultimoCheck=hoyStr;
+  saveDB();
+
+  const manana=new Date(hoy); manana.setDate(manana.getDate()+1);
+  const mananaStr=manana.toISOString().split('T')[0];
+
+  const evsHoy=getVencMes(hoy.getFullYear(),hoy.getMonth()).filter(v=>v.fecha===hoyStr&&v.org!=='tarea');
+  const evsManana=getVencMes(manana.getFullYear(),manana.getMonth()).filter(v=>v.fecha===mananaStr&&v.org!=='tarea');
+
+  // Tareas con recordatorio
+  DB.tareas.forEach(t=>{
+    if(t.estado==='completado') return;
+    const rec=t.recordatorio||'dia_anterior';
+    if(rec==='ninguno') return;
+    if((rec==='mismo_dia'||rec==='ambos')&&t.fecha===hoyStr){
+      evsHoy.push({fecha:t.fecha,org:'tarea',desc:t.tema,contribuyente:getC(t.clienteId)?.nombre||''});
+    }
+    if((rec==='dia_anterior'||rec==='ambos')&&t.fecha===mananaStr){
+      evsManana.push({fecha:t.fecha,org:'tarea',desc:t.tema,contribuyente:getC(t.clienteId)?.nombre||''});
+    }
+  });
+
+  if(navigator.serviceWorker?.controller){
+    navigator.serviceWorker.controller.postMessage({
+      type:'SCHEDULE_CHECK',
+      payload:{vencimientosHoy:evsHoy,vencimientosManana:evsManana,fecha:hoyStr}
+    });
+  } else {
+    // Fallback: notificación directa si el SW no está listo
+    if(evsHoy.length){
+      new Notification('📅 Vencimientos de HOY',{
+        body:evsHoy.map(v=>`• ${ORG[v.org]||v.org}: ${v.desc}${v.contribuyente?' ('+v.contribuyente+')':''}`).join('\n'),
+        icon:'./icon-192.png', tag:'venc-hoy-'+hoyStr, requireInteraction:true
+      });
+    }
+    if(evsManana.length){
+      new Notification('⏰ Vencimientos de MAÑANA',{
+        body:evsManana.map(v=>`• ${ORG[v.org]||v.org}: ${v.desc}${v.contribuyente?' ('+v.contribuyente+')':''}`).join('\n'),
+        icon:'./icon-192.png', tag:'venc-manana-'+hoyStr
+      });
+    }
+  }
+}
+
+/* =========================================================
+   ALERTAS VISUALES EN INICIO
+   ========================================================= */
+function renderAlertas(){
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const hoyStr=hoy.toISOString().split('T')[0];
+  const manana=new Date(hoy); manana.setDate(manana.getDate()+1);
+  const mananaStr=manana.toISOString().split('T')[0];
+
+  const evsHoy=[
+    ...getVencMes(hoy.getFullYear(),hoy.getMonth()).filter(v=>v.fecha===hoyStr&&v.org!=='tarea'),
+    ...DB.tareas.filter(t=>t.fecha===hoyStr&&t.estado!=='completado'&&(t.recordatorio==='mismo_dia'||t.recordatorio==='ambos')).map(t=>({desc:t.tema,org:'tarea',contribuyente:getC(t.clienteId)?.nombre||''}))
+  ];
+  const evsManana=[
+    ...getVencMes(manana.getFullYear(),manana.getMonth()).filter(v=>v.fecha===mananaStr&&v.org!=='tarea'),
+    ...DB.tareas.filter(t=>t.fecha===mananaStr&&t.estado!=='completado'&&(t.recordatorio==='dia_anterior'||t.recordatorio==='ambos')).map(t=>({desc:t.tema,org:'tarea',contribuyente:getC(t.clienteId)?.nombre||''}))
+  ];
+
+  const whoy=document.getElementById('alert-hoy-wrap');
+  whoy.innerHTML=evsHoy.length?`
+    <div class="alert-box alert-hoy">
+      <div class="alert-title"><i class="ti ti-alert-triangle"></i>Vencimientos de HOY</div>
+      ${evsHoy.map(v=>`<div class="alert-item">• <strong>${ORG[v.org]||v.org}:</strong> ${v.desc}${v.contribuyente?' — '+v.contribuyente:''}</div>`).join('')}
+    </div>`:'';
+
+  const wman=document.getElementById('alert-manana-wrap');
+  wman.innerHTML=evsManana.length?`
+    <div class="alert-box alert-manana">
+      <div class="alert-title"><i class="ti ti-clock"></i>Vencimientos de MAÑANA</div>
+      ${evsManana.map(v=>`<div class="alert-item">• <strong>${ORG[v.org]||v.org}:</strong> ${v.desc}${v.contribuyente?' — '+v.contribuyente:''}</div>`).join('')}
+    </div>`:'';
+}
+
+/* =========================================================
+   NAVEGACIÓN
+   ========================================================= */
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.getElementById('bn-'+id).classList.add('active');
+  document.getElementById('page-wrap').scrollTop=0;
+  curPage=id;
+  const titles={inicio:'Inicio',tareas:'Tareas',cal:'Calendario',contrib:'Clientes'};
+  document.getElementById('top-title').textContent=titles[id];
+  document.getElementById('fab').style.display=(id==='inicio')?'none':'flex';
+  if(id==='inicio') renderDashboard();
+  if(id==='tareas') renderTareas();
+  if(id==='cal') renderCal();
+  if(id==='contrib') renderContrib();
+}
+function fabAction(){
+  if(curPage==='contrib') openContribModal();
+  else openTareaModal();
+}
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
+function getC(id){return DB.contribuyentes.find(c=>c.id===id);}
+function fmtD(y,m,d){return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;}
+function lastDay(y,m){return new Date(y,m+1,0).getDate();}
+function badgeE(e){
+  const m={pendiente:'badge-pend','en progreso':'badge-prog',completado:'badge-done',vencido:'badge-venc'};
+  return `<span class="badge ${m[e]||'badge-pend'}">${e}</span>`;
+}
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),2500);
+}
+function formatTel(tel){
+  // Normaliza el teléfono para wa.me (solo dígitos, con código país)
+  let t=tel.replace(/[\s\-\(\)]/g,'');
+  if(t.startsWith('0')) t=t.slice(1);
+  if(!t.startsWith('+')) t='+54'+t;
+  return t.replace(/\+/g,'');
+}
+
+/* =========================================================
+   VENCIMIENTOS
+   ========================================================= */
+function getVencMes(year,month){
+  const evs=[];
+  DB.contribuyentes.forEach(c=>{
+    const a=c.impuestos.arca,ap=c.impuestos.api,mu=c.impuestos.muni,co=c.impuestos.comarb;
+    const add=(dia,org,desc)=>evs.push({fecha:fmtD(year,month,dia),org,desc,contribuyente:c.nombre,clienteId:c.id});
+    if(a.includes('monotributo')) add(20,'arca','Monotributo');
+    if(a.includes('iva')) add(21,'arca','DDJJ IVA');
+    if(a.includes('sicore')) add(16,'arca','SICORE');
+    if(a.includes('sircar')) add(16,'arca','SIRCAR');
+    if(a.includes('f931')) add(15,'arca','F.931 Cargas Sociales');
+    if(a.includes('lsd')) add(10,'arca','Libro de Sueldos Digital');
+    if(a.includes('libro_iva')) add(lastDay(year,month),'arca','Libro de IVA Digital');
+    if(a.includes('ganancias')&&month===3) add(30,'arca','DDJJ Ganancias PH');
+    if(a.includes('bp')&&month===5) add(30,'arca','Bienes Personales');
+    if(a.includes('bp_acc')&&month===5) add(27,'arca','BP Acciones y Part. Soc.');
+    if(a.includes('rips')&&month===5) add(30,'arca','Reg. Inf. Part. Societarias');
+    if(ap.includes('iibb_sf')) add(18,'api','IIBB Santa Fe');
+    if(co.includes('cm_comarb')) add(20,'comarb','CM03/CM05 COMARB');
+    if(mu.includes('drei')) add(10,'muni','Drei Rosario');
+  });
+  DB.vencimientos.filter(v=>{
+    const d=new Date(v.fecha);
+    return d.getFullYear()===year&&d.getMonth()===month;
+  }).forEach(v=>evs.push({...v,org:v.org||'custom'}));
+  DB.tareas.filter(t=>{
+    const d=new Date(t.fecha+'T00:00');
+    return d.getFullYear()===year&&d.getMonth()===month;
+  }).forEach(t=>{
+    const c=getC(t.clienteId);
+    evs.push({fecha:t.fecha,org:'tarea',desc:t.tema,contribuyente:c?c.nombre:'',clienteId:t.clienteId});
+  });
+  return evs.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+}
+
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
+function renderDashboard(){
+  renderNotifBanner();
+  renderAlertas();
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const en7=new Date(hoy); en7.setDate(en7.getDate()+7);
+  const pend=DB.tareas.filter(t=>t.estado!=='completado');
+  const comp=DB.tareas.filter(t=>t.estado==='completado');
+  const venc=DB.tareas.filter(t=>new Date(t.fecha+'T00:00')<hoy&&t.estado!=='completado');
+  document.getElementById('stat-grid').innerHTML=`
+    <div class="stat-card"><div class="stat-val">${DB.contribuyentes.length}</div><div class="stat-lbl">Contribuyentes</div></div>
+    <div class="stat-card"><div class="stat-val">${pend.length}</div><div class="stat-lbl">Pendientes</div></div>
+    <div class="stat-card"><div class="stat-val">${comp.length}</div><div class="stat-lbl">Completadas</div></div>
+    <div class="stat-card"><div class="stat-val" style="color:#E24B4A">${venc.length}</div><div class="stat-lbl">Vencidas</div></div>`;
+  const proxVenc=getVencMes(hoy.getFullYear(),hoy.getMonth())
+    .filter(v=>v.org!=='tarea'&&v.org!=='custom').concat(getVencMes(hoy.getFullYear(),hoy.getMonth()).filter(v=>v.org==='tarea'||v.org==='custom'))
+    .filter(v=>{const d=new Date(v.fecha+'T00:00');return d>=hoy&&d<=en7;}).slice(0,6);
+  document.getElementById('dash-venc').innerHTML=proxVenc.length
+    ?proxVenc.map(v=>upcItem(v,hoy)).join('')
+    :'<div class="empty">Sin vencimientos en los próximos 7 días</div>';
+  const topT=DB.tareas.filter(t=>t.estado!=='completado').sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,5);
+  document.getElementById('dash-tareas').innerHTML=topT.length
+    ?topT.map(t=>{
+      const c=getC(t.clienteId);const d=new Date(t.fecha+'T00:00');const iv=d<hoy;
+      return `<div class="list-item">
+        <div class="li-icon" style="background:${iv?'#fee2e2':t.prioridad==='alta'?'#fef9c3':'var(--bg2)'};color:${iv?'#991b1b':t.prioridad==='alta'?'#92400e':'var(--text2)'}">
+          <i class="ti ti-${iv?'alert-circle':'clock'}"></i>
+        </div>
+        <div class="li-body">
+          <div class="li-title">${t.tema}</div>
+          <div class="li-sub">${c?c.nombre:'—'} · ${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short'})}</div>
+        </div>
+        <div class="li-right">${badgeE(iv?'vencido':t.estado)}</div>
+      </div>`;
+    }).join(''):'<div class="empty">Sin tareas pendientes</div>';
+}
+function upcItem(v,hoy){
+  const d=new Date(v.fecha+'T00:00');
+  const diff=Math.round((d-hoy)/86400000);
+  const col=diff<=1?'#E24B4A':diff<=3?'#f59e0b':'#16a34a';
+  return `<div class="upc-item">
+    <div class="upc-stripe" style="background:${col}"></div>
+    <div class="upc-date">${d.getDate()} ${MESES_C[d.getMonth()]}</div>
+    <div class="upc-info">
+      <span class="tax-tag ${v.org}" style="font-size:10px">${ORG[v.org]||v.org}</span>
+      <div class="upc-desc">${v.desc}${v.contribuyente?' — '+v.contribuyente:''}</div>
+    </div>
+  </div>`;
+}
+
+/* =========================================================
+   TAREAS
+   ========================================================= */
+function renderTareas(){
+  const pills=['todos','pendiente','en progreso','completado','alta'];
+  document.getElementById('tarea-pills').innerHTML=pills.map(p=>
+    `<span class="pill ${tareaFilter===p?'active':''}" onclick="setTF('${p}')">${p==='alta'?'Alta prioridad':p.charAt(0).toUpperCase()+p.slice(1)}</span>`
+  ).join('');
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  let t=[...DB.tareas];
+  if(tareaFilter==='alta') t=t.filter(x=>x.prioridad==='alta');
+  else if(tareaFilter!=='todos') t=t.filter(x=>x.estado===tareaFilter);
+  t.sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const recLabel={ninguno:'',dia_anterior:'🔔 Alerta día anterior',mismo_dia:'🔔 Alerta el mismo día',ambos:'🔔 Alerta día anterior + día del vto.'};
+  document.getElementById('tareas-list').innerHTML=t.length?t.map(t=>{
+    const c=getC(t.clienteId);const d=new Date(t.fecha+'T00:00');const iv=d<hoy&&t.estado!=='completado';
+    return `<div class="list-item">
+      <div class="li-body">
+        <div class="li-title">${t.tema}</div>
+        <div class="li-sub">${c?c.nombre:'—'} · <span style="color:${iv?'#E24B4A':'inherit'};font-weight:${iv?700:400}">${d.toLocaleDateString('es-AR',{day:'2-digit',month:'short',year:'numeric'})}</span> · ${t.prioridad}</div>
+        ${t.recordatorio&&t.recordatorio!=='ninguno'?`<div class="li-sub" style="color:var(--accent);margin-top:2px;font-size:12px">${recLabel[t.recordatorio]||''}</div>`:''}
+        ${t.notas?`<div class="li-sub" style="margin-top:2px">${t.notas}</div>`:''}
+      </div>
+      <div class="li-right">
+        ${badgeE(iv?'vencido':t.estado)}
+        <div style="display:flex;gap:5px">
+          <button class="icon-btn" style="width:34px;height:34px;font-size:18px" onclick="openTareaModal(${t.id})"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn" style="width:34px;height:34px;font-size:18px;color:#E24B4A" onclick="deleteTarea(${t.id})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+    </div>`;
+  }).join(''):'<div class="empty">Sin tareas que coincidan</div>';
+}
+function setTF(f){tareaFilter=f;renderTareas();}
+
+/* =========================================================
+   CALENDARIO
+   ========================================================= */
+function toggleOrg(el){
+  const org=el.dataset.org;
+  if(activeOrgs.has(org)){activeOrgs.delete(org);el.classList.remove('active');}
+  else{activeOrgs.add(org);el.classList.add('active');}
+  renderCal();
+}
+function renderCal(){
+  document.getElementById('cal-label').textContent=`${MESES[calMonth]} ${calYear}`;
+  const evs=getVencMes(calYear,calMonth).filter(v=>activeOrgs.has(v.org));
+  const byDay={};
+  evs.forEach(v=>{const d=parseInt(v.fecha.split('-')[2]);if(!byDay[d])byDay[d]=[];byDay[d].push(v);});
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const last=lastDay(calYear,calMonth);
+  const hoy=new Date(); hoy.setHours(0,0,0,0);
+  const prevLast=new Date(calYear,calMonth,0).getDate();
+  let html='';
+  for(let i=0;i<firstDay;i++) html+=`<div class="cal-day other"><div class="day-num">${prevLast-firstDay+1+i}</div></div>`;
+  for(let d=1;d<=last;d++){
+    const ds=fmtD(calYear,calMonth,d);
+    const td=new Date(calYear,calMonth,d); td.setHours(0,0,0,0);
+    const isT=td.getTime()===hoy.getTime();
+    const dayEvs=byDay[d]||[];
+    const dots=[...new Set(dayEvs.map(v=>v.org))].slice(0,5).map(o=>`<div class="dot dot-${o}"></div>`).join('');
+    html+=`<div class="cal-day${isT?' today':''}" onclick="openDayModal('${ds}')">
+      <div class="day-num">${d}</div><div class="dots">${dots}</div>
+    </div>`;
+  }
+  const total=firstDay+last;
+  for(let d=1;d<=(total%7===0?0:7-total%7);d++) html+=`<div class="cal-day other"><div class="day-num">${d}</div></div>`;
+  document.getElementById('cal-grid').innerHTML=html;
+  document.getElementById('cal-list').innerHTML=evs.length
+    ?evs.map(v=>{
+      const d=new Date(v.fecha+'T00:00');
+      return `<div class="upc-item">
+        <div class="upc-date">${String(d.getDate()).padStart(2,'0')} ${MESES_C[d.getMonth()]}</div>
+        <div class="upc-info">
+          <span class="tax-tag ${v.org}" style="font-size:10px">${ORG[v.org]||v.org}</span>
+          <div class="upc-desc">${v.desc}${v.contribuyente?' — '+v.contribuyente:''}</div>
+        </div>
+      </div>`;
+    }).join(''):'<div class="empty">Sin vencimientos para mostrar</div>';
+}
+function changeMonth(dir){
+  calMonth+=dir;
+  if(calMonth>11){calMonth=0;calYear++;}
+  if(calMonth<0){calMonth=11;calYear--;}
+  renderCal();
+}
+
+/* =========================================================
+   WHATSAPP POR CLIENTE
+   ========================================================= */
+function openWspModal(){
+  document.getElementById('wsp-mes-label').textContent=`${MESES[calMonth]} ${calYear}`;
+  const list=document.getElementById('wsp-contrib-list');
+  list.innerHTML=DB.contribuyentes.map(c=>{
+    const hasTel=c.tel&&c.tel.trim()!=='';
+    const evsC=getVencMes(calYear,calMonth).filter(v=>v.clienteId===c.id&&activeOrgs.has(v.org));
+    const cant=evsC.length;
+    return `<div class="wsp-contrib-item">
+      <div class="wsp-avatar">${c.nombre.split(/[,\s]/)[0].slice(0,2).toUpperCase()}</div>
+      <div class="wsp-info" onclick="enviarWsp(${c.id})">
+        <div class="wsp-name">${c.nombre}</div>
+        <div class="wsp-tel ${hasTel?'':'no-tel'}">${hasTel?'📱 '+c.tel:'Sin teléfono guardado'} · ${cant} vencimiento${cant!==1?'s':''}</div>
+      </div>
+      <button class="wsp-send" onclick="enviarWsp(${c.id})" title="Enviar por WhatsApp"><i class="ti ti-brand-whatsapp"></i></button>
+    </div>`;
+  }).join('');
+  document.getElementById('modal-wsp').classList.add('open');
+}
+
+function enviarWsp(clienteId){
+  const evs=getVencMes(calYear,calMonth).filter(v=>activeOrgs.has(v.org)&&(clienteId===null||v.clienteId===clienteId));
+  let c=null;
+  let tel='';
+  if(clienteId!==null){
+    c=getC(clienteId);
+    if(c&&c.tel&&c.tel.trim()!=='') tel=formatTel(c.tel);
+  }
+  if(!evs.length){toast('No hay vencimientos para este cliente este mes');return;}
+
+  let msg=c
+    ?`📅 *Vencimientos ${MESES[calMonth]} ${calYear}*\n_Para: ${c.nombre}_\n\n`
+    :`📅 *Vencimientos ${MESES[calMonth]} ${calYear}*\n\n`;
+
+  const byDay={};
+  evs.forEach(v=>{const d=parseInt(v.fecha.split('-')[2]);if(!byDay[d])byDay[d]=[];byDay[d].push(v);});
+  Object.keys(byDay).sort((a,b)=>+a-+b).forEach(d=>{
+    msg+=`*${String(d).padStart(2,'0')}/${String(calMonth+1).padStart(2,'0')}/${calYear}*\n`;
+    byDay[d].forEach(v=>{
+      msg+=`  • ${ORG[v.org]||v.org}: ${v.desc}\n`;
+    });
+    msg+='\n';
+  });
+  msg+='_Agenda Contador Público_';
+
+  const encoded=encodeURIComponent(msg);
+  const url=tel?`https://wa.me/${tel}?text=${encoded}`:`https://wa.me/?text=${encoded}`;
+  window.open(url,'_blank');
+  closeModal('modal-wsp');
+}
+
+/* =========================================================
+   MODAL DIA
+   ========================================================= */
+function openDayModal(ds){
+  selectedDay=ds;
+  const d=new Date(ds+'T00:00');
+  document.getElementById('md-title').textContent=`${d.getDate()} de ${MESES[d.getMonth()].toLowerCase()} ${d.getFullYear()}`;
+  const evs=getVencMes(d.getFullYear(),d.getMonth()).filter(v=>v.fecha===ds);
+  document.getElementById('md-events').innerHTML=evs.length
+    ?evs.map(v=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:0.5px solid var(--border)">
+        <span class="tax-tag ${v.org}" style="font-size:10px">${ORG[v.org]||v.org}</span>
+        <span style="font-size:14px">${v.desc}${v.contribuyente?' — <em>'+v.contribuyente+'</em>':''}</span>
+      </div>`).join('')
+    :'<p style="font-size:14px;color:var(--text2);margin-bottom:8px">Sin eventos registrados</p>';
+  const sel=document.getElementById('dia-contrib');
+  sel.innerHTML='<option value="">Sin contribuyente</option>'+DB.contribuyentes.map(c=>`<option value="${c.nombre}">${c.nombre}</option>`).join('');
+  document.getElementById('dia-desc').value='';
+  document.getElementById('modal-dia').classList.add('open');
+}
+function saveDiaEvent(){
+  const desc=document.getElementById('dia-desc').value.trim();
+  if(!desc){toast('Ingresá una descripción');return;}
+  DB.vencimientos.push({id:DB.nextId.v++,fecha:selectedDay,org:document.getElementById('dia-org').value,desc,contribuyente:document.getElementById('dia-contrib').value});
+  saveDB();closeModal('modal-dia');renderCal();toast('Vencimiento agregado');
+}
+
+/* =========================================================
+   CONTRIBUYENTES
+   ========================================================= */
+function renderContrib(){
+  const el=document.getElementById('contrib-list-el');
+  if(!DB.contribuyentes.length){el.innerHTML='<div class="empty">Sin contribuyentes.<br>Tocá + para agregar.</div>';return;}
+  el.innerHTML=DB.contribuyentes.map(c=>{
+    const allTags=[
+      ...c.impuestos.arca.map(i=>{const x=IMPUESTOS.arca.find(t=>t.id===i);return x?`<span class="tax-tag arca">${x.label}</span>`:'';}),
+      ...c.impuestos.api.map(i=>{const x=IMPUESTOS.api.find(t=>t.id===i);return x?`<span class="tax-tag api">${x.label}</span>`:'';}),
+      ...c.impuestos.muni.map(i=>{const x=IMPUESTOS.muni.find(t=>t.id===i);return x?`<span class="tax-tag muni">${x.label}</span>`:'';}),
+      ...c.impuestos.comarb.map(i=>{const x=IMPUESTOS.comarb.find(t=>t.id===i);return x?`<span class="tax-tag comarb">${x.label}</span>`:'';}),
+    ].filter(Boolean);
+    return `<div class="contrib-card">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between">
+        <div style="flex:1;min-width:0">
+          <div class="contrib-name">${c.nombre}</div>
+          <div class="contrib-cuit">CUIT: ${c.cuit}</div>
+          ${c.tel?`<div class="contrib-tel"><i class="ti ti-brand-whatsapp" style="font-size:14px"></i>${c.tel}</div>`:''}
+          ${c.obs?`<div class="li-sub" style="margin-bottom:6px">${c.obs}</div>`:''}
+        </div>
+        <div style="display:flex;gap:8px;margin-left:10px">
+          <button class="icon-btn" onclick="openContribModal(${c.id})"><i class="ti ti-edit"></i></button>
+          <button class="icon-btn" style="color:#E24B4A" onclick="deleteContrib(${c.id})"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>
+      <div class="tag-row">${allTags.length?allTags.join(''):'<span style="font-size:12px;color:var(--text3)">Sin impuestos asignados</span>'}</div>
+    </div>`;
+  }).join('');
+}
+function buildChecks(container,items,orgKey,selected){
+  document.getElementById(container).innerHTML=items.map(it=>`
+    <label class="chk-item">
+      <input type="checkbox" name="${orgKey}" value="${it.id}" ${selected.includes(it.id)?'checked':''}>${it.label}
+    </label>`).join('');
+}
+function openContribModal(id){
+  editContribId=id||null;
+  const c=id?DB.contribuyentes.find(x=>x.id===id):{nombre:'',cuit:'',tel:'',obs:'',impuestos:{arca:[],api:[],muni:[],comarb:[]}};
+  document.getElementById('mc-title').textContent=id?'Editar contribuyente':'Nuevo contribuyente';
+  document.getElementById('c-nombre').value=c.nombre||'';
+  document.getElementById('c-cuit').value=c.cuit||'';
+  document.getElementById('c-tel').value=c.tel||'';
+  document.getElementById('c-obs').value=c.obs||'';
+  buildChecks('arca-checks',IMPUESTOS.arca,'arca',c.impuestos.arca);
+  buildChecks('api-checks',IMPUESTOS.api,'api',c.impuestos.api);
+  buildChecks('muni-checks',IMPUESTOS.muni,'muni',c.impuestos.muni);
+  buildChecks('comarb-checks',IMPUESTOS.comarb,'comarb',c.impuestos.comarb);
+  document.getElementById('modal-contrib').classList.add('open');
+}
+function saveContrib(){
+  const nombre=document.getElementById('c-nombre').value.trim();
+  const cuit=document.getElementById('c-cuit').value.trim();
+  if(!nombre||!cuit){toast('Completá nombre y CUIT');return;}
+  const getChecked=org=>[...document.querySelectorAll(`#${org}-checks input:checked`)].map(i=>i.value);
+  const obj={nombre,cuit,tel:document.getElementById('c-tel').value.trim(),obs:document.getElementById('c-obs').value.trim(),impuestos:{arca:getChecked('arca'),api:getChecked('api'),muni:getChecked('muni'),comarb:getChecked('comarb')}};
+  if(editContribId){Object.assign(DB.contribuyentes.find(c=>c.id===editContribId),obj);}
+  else{obj.id=DB.nextId.c++;DB.contribuyentes.push(obj);}
+  saveDB();closeModal('modal-contrib');renderContrib();
+  toast(editContribId?'Contribuyente actualizado':'Contribuyente agregado');
+}
+function deleteContrib(id){
+  if(!confirm('¿Eliminar este contribuyente?')) return;
+  DB.contribuyentes=DB.contribuyentes.filter(c=>c.id!==id);
+  DB.tareas=DB.tareas.filter(t=>t.clienteId!==id);
+  saveDB();renderContrib();toast('Eliminado');
+}
+
+/* =========================================================
+   TAREAS MODAL
+   ========================================================= */
+function openTareaModal(id){
+  editTareaId=id||null;
+  const t=id?DB.tareas.find(x=>x.id===id):{};
+  document.getElementById('mt-title').textContent=id?'Editar tarea':'Nueva tarea';
+  document.getElementById('t-cliente').innerHTML=DB.contribuyentes.length
+    ?DB.contribuyentes.map(c=>`<option value="${c.id}" ${t.clienteId==c.id?'selected':''}>${c.nombre}</option>`).join('')
+    :'<option value="">— Primero agregá un cliente —</option>';
+  document.getElementById('t-tema').value=t.tema||'';
+  document.getElementById('t-fecha').value=t.fecha||new Date().toISOString().split('T')[0];
+  document.getElementById('t-prioridad').value=t.prioridad||'media';
+  document.getElementById('t-estado').value=t.estado||'pendiente';
+  document.getElementById('t-recordatorio').value=t.recordatorio||'dia_anterior';
+  document.getElementById('t-notas').value=t.notas||'';
+  document.getElementById('modal-tarea').classList.add('open');
+}
+function saveTarea(){
+  const tema=document.getElementById('t-tema').value.trim();
+  const clienteId=parseInt(document.getElementById('t-cliente').value);
+  if(!tema){toast('Ingresá un tema');return;}
+  if(!clienteId){toast('Seleccioná un cliente');return;}
+  const obj={clienteId,tema,fecha:document.getElementById('t-fecha').value,prioridad:document.getElementById('t-prioridad').value,estado:document.getElementById('t-estado').value,recordatorio:document.getElementById('t-recordatorio').value,notas:document.getElementById('t-notas').value.trim()};
+  if(editTareaId){Object.assign(DB.tareas.find(t=>t.id===editTareaId),obj);}
+  else{obj.id=DB.nextId.t++;DB.tareas.push(obj);}
+  saveDB();closeModal('modal-tarea');renderTareas();
+  toast(editTareaId?'Tarea actualizada':'Tarea agregada');
+}
+function deleteTarea(id){
+  if(!confirm('¿Eliminar esta tarea?')) return;
+  DB.tareas=DB.tareas.filter(t=>t.id!==id);
+  saveDB();renderTareas();toast('Tarea eliminada');
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',function(e){if(e.target===this)closeModal(this.id);}));
+
+/* =========================================================
+   INIT
+   ========================================================= */
+registrarSW();
+renderDashboard();
+// Chequeo automático al cargar (para notificaciones)
+setTimeout(()=>{
+  if(Notification.permission==='granted') checkVencimientosParaNotif();
+},1500);
+</script>
+</body>
+</html>
